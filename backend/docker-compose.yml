@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  app:
+    build:
+      args:
+        user: ${APP_NAME}-admin
+        uid: 1000
+      context: ./
+      dockerfile: docker/php-fpm/Dockerfile
+    image: ${APP_NAME}-image
+    container_name: ${APP_NAME}-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - proxy
+
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: ${APP_NAME}-nginx
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/conf:/etc/nginx/conf.d
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${APP_NAME}-nginx.rule=Host(`api.${APP_NAME}.localhost`)"
+      - "traefik.http.routers.${APP_NAME}-nginx.entrypoints=web"
+      - "traefik.http.routers.vue-app.service=${APP_NAME}-nginx"
+    networks:
+      - proxy
+
+  postgres:
+    image: postgres:latest
+    container_name: ${APP_NAME}-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - 5000:5432
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
