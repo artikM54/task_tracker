@@ -7,7 +7,7 @@ services:
     volumes:
       - .:/app
     working_dir: "/app"
-    command: npm run dev -- --host
+    command: yarn run dev -- --host
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.${APP_NAME}-frontend.rule=Host(`${APP_NAME}.localhost`)"
