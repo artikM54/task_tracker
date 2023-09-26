@@ -10,7 +10,10 @@
     "lint:js": "eslint src --ext .ts,.vue"
   },
   "dependencies": {
+    "autoprefixer": "^10.4.16",
     "pinia": "^2.1.6",
+    "postcss": "^8.4.30",
+    "tailwindcss": "^3.3.3",
     "vue": "^3.3.4"
   },
   "devDependencies": {
