@@ -5,24 +5,22 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Resources\User\MinimalInfoUserResource;
-use App\Models\Profile;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use App\Services\UserService;
 
 class UserController extends Controller
 {
+    protected UserService $userService;
+
+    public function __construct()
+    {
+        $this->userService = new UserService();
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
     {
         //
     }
@@ -33,21 +31,7 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
-
-        // TODO: разнести на классы
-        $user = User::create([
-            'email' => $data['email'],
-            'password' => Hash::make($data['password'])
-        ]);
-
-        $data['user_id'] = $user->id;
-
-        Profile::create([
-            'user_id' => $data['user_id'],
-            'last_name' => $data['last_name'],
-            'first_name' => $data['first_name'],
-            'middle_name' => $data['middle_name']
-        ]);
+        $user = $this->userService->create($data);
 
         return MinimalInfoUserResource::make($user);
     }
@@ -79,8 +63,14 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(User $user)
     {
-        //
+        $deleted = $this->userService->delete($user);
+
+        $response = $deleted
+            ? response()->json(null, 204)
+            : response()->json(['error' => 'Пользователь не найден'], 404);
+
+        return $response;
     }
 }
