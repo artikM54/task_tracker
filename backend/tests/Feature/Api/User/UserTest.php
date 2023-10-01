@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api\User;
 
+use App\Models\Profile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
@@ -53,5 +54,28 @@ class UserTest extends TestCase
                 'full_name' => $fullNameUser
             ]
         ]);
+    }
+
+    /** test */
+    public function test_destroy_a_user(): void
+    {
+        $this->withoutExceptionHandling();
+
+        $user = User::factory()->create();
+
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('profiles', 1);
+
+        $profile = Profile::first();
+
+        $this->assertEquals($user->id, $profile->id);
+
+        $response = $this->delete("api/users/{$user->id}");
+
+        $this->assertDatabaseCount('users', 0);
+        $this->assertDatabaseCount('profiles', 0);
+
+        $response->assertStatus(204);
+        $this->assertEmpty($response->content());
     }
 }
