@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\User\MinimalInfoUserResource;
+use App\Http\Resources\User\UserResource;
 use App\Models\User;
 use App\Services\UserService;
 
@@ -22,7 +24,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        $users = User::with('profile')->get();
+
+        return MinimalInfoUserResource::collection($users);
     }
 
     /**
@@ -39,25 +43,24 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(User $user)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        return UserResource::make($user);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        //
+        $data = $request->validated();
+        $updated = $this->userService->update($user, $data);
+
+        $response = $updated
+            ? UserResource::make($user)
+            : response()->json(['error' => 'Пользователь не найден'], 404);
+
+        return $response;
     }
 
     /**
