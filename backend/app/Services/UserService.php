@@ -46,6 +46,11 @@ class UserService
         ]);
     }
 
+    public function update(User $user, array $data): bool
+    {
+        return $user->profile->update($data);
+    }
+
     public function delete(User $user): bool
     {
         return $user->delete();

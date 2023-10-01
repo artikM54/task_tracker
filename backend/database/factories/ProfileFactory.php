@@ -16,9 +16,13 @@ class ProfileFactory extends Factory
      */
     public function definition(): array
     {
+        $middleName = fake()->optional()->firstName;
+
         return [
             'last_name' => fake()->lastName(),
-            'first_name' => fake()->firstName()
+            'first_name' => fake()->firstName(),
+            'middle_name' => $middleName,
+            'phone' => '7' . fake()->numberBetween(1000000000, 9999999999)
         ];
     }
 }
