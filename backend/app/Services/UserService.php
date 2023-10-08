@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use Exception;
 use App\Models\User;
 use App\Models\Profile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Modules\File\Models\File;
 
 class UserService
 {
@@ -20,7 +23,7 @@ class UserService
             $this->createProfile($data);
 
             DB::commit();
-        } catch(\Exception $e) {
+        } catch(Exception $e) {
             DB::rollBack();
             throw $e;
         }
@@ -54,5 +57,49 @@ class UserService
     public function delete(User $user): bool
     {
         return $user->delete();
+    }
+
+    public function changeAvatar(User $user, object $avatar): File
+    {
+        $user->load('profile.avatar');
+        $currentAvatar = $user->profile->avatar;
+
+        $path = Storage::disk('private')->put('avatars', $avatar);
+
+        try {
+            $user->profile->avatar()->create([
+                'filename'=> $avatar->name,
+                'path'=> $path,
+            ]);
+
+            if ($currentAvatar) {
+                $deleted = $this->deleteAvatar($currentAvatar);
+
+                if(! $deleted) {
+                    throw new Exception('Ошибка удаления аватара');
+                }
+            }
+
+            DB::commit();
+        } catch(Exception $e) {
+            DB::rollBack();
+            Storage::delete($path);
+
+            throw $e;
+        }
+
+        $user->load('profile.avatar');
+        return $user->profile->avatar;
+    }
+
+    public function deleteAvatar(File $avatar): bool
+    {
+        $deleted = $avatar->delete();
+
+        if($deleted) {
+            Storage::disk('private')->delete($avatar->path);
+        }
+
+        return $deleted;
     }
 }

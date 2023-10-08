@@ -3,8 +3,6 @@
 namespace Tests\Feature\Api\User;
 
 use App\Models\Profile;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use App\Models\User;
@@ -102,6 +100,52 @@ class UserTest extends TestCase
                 'middle_name' => $userUpdated->profile->middle_name,
                 'phone' => $userUpdated->profile->phone,
                 'avatar' => $userUpdated->profile->avatar
+            ]
+        ]);
+    }
+
+    /** test */
+    public function test_update_avatar_of_user(): void
+    {
+        $this->withoutExceptionHandling();
+
+        // TODO: создавать уже с аватаркой
+        $user = User::factory()->create();
+
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('profiles', 1);
+
+        Storage::fake('private');
+
+        $fileName = 'avatar.jpg';
+        $file = UploadedFile::fake()->image($fileName);
+
+        $data = [
+            'avatar' => $file
+        ];
+
+        $response = $this->patch("api/users/{$user->id}/change-avatar", $data);
+
+        $this->assertDatabaseCount('files', 1);
+
+        $user = User::with('profile.avatar')
+            ->get()
+            ->first();
+
+        $user->profile->avatar->path;
+
+        Storage::disk('private')->assertExists($user->profile->avatar->path);
+
+        $this->assertEquals($fileName, $user->profile->avatar->filename);
+        $this->assertEquals("avatars/{$file->hashName()}", $user->profile->avatar->path);
+
+        $url = url('storage/' . $user->profile->avatar->path);
+
+        $response->assertJson([
+            'data' => [
+                'id' => $user->profile->avatar->id,
+                'filename' => $user->profile->avatar->filename,
+                'url' => $url
             ]
         ]);
     }
