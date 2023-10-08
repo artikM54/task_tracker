@@ -20,3 +20,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::resource('users', UserController::class);
+Route::patch('users/{user}/change-avatar', [UserController::class, 'changeAvatar']);

@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use App\Http\Requests\User\ChangeAvatarUserRequest;
 use App\Http\Resources\User\MinimalInfoUserResource;
+use Modules\File\Transformers\FileResource;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
 use App\Services\UserService;
@@ -75,5 +76,16 @@ class UserController extends Controller
             : response()->json(['error' => 'Пользователь не найден'], 404);
 
         return $response;
+    }
+
+    /**
+     * Change users avatar
+     */
+    public function changeAvatar(ChangeAvatarUserRequest $request, User $user): FileResource
+    {
+        $avatar = $request->file('avatar');
+        $file = $this->userService->changeAvatar($user, $avatar);
+
+        return FileResource::make($file);
     }
 }

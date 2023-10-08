@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\File\Models\File;
 
 class Profile extends Model
 {
@@ -19,12 +20,16 @@ class Profile extends Model
         'last_name',
         'first_name',
         'middle_name',
-        'phone',
-        'avatar'
+        'phone'
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function avatar()
+    {
+        return $this->morphOne(File::class, 'fileable');
     }
 }

@@ -17,9 +17,6 @@ RUN apt-get update && apt-get install -y \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-# RUN docker-php-ext-install mbstring exif pcntl bcmath gd pdo
-
 # Install Postgress
 RUN apt-get update && apt-get install -y \
     libmcrypt-dev \
@@ -27,6 +24,12 @@ RUN apt-get update && apt-get install -y \
 
 RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-install pgsql pdo_pgsql
+
+# Install GD extension
+RUN apt-get update && \
+apt-get install -y libfreetype6-dev libjpeg62-turbo-dev libpng-dev && \
+docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ && \
+docker-php-ext-install gd
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
