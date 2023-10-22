@@ -40,8 +40,9 @@ class UserTest extends TestCase
 
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseCount('profiles', 1);
+        $this->assertDatabaseCount('personal_access_tokens', 1);
 
-        $user = User::with('profile')
+        $user = User::with(['profile'])
             ->get()
             ->first();
 
@@ -55,6 +56,15 @@ class UserTest extends TestCase
 
         $fullNameUser = "{$data['last_name']} {$data['first_name']} {$data['middle_name']}";
         $fullNameUser = preg_replace('/\s+/', ' ', trim($fullNameUser));
+
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'email',
+                'full_name',
+                'accessToken'
+            ]
+        ]);
 
         $response->assertJson([
             'data' => [
@@ -82,7 +92,7 @@ class UserTest extends TestCase
             'phone' => '78889998888'
         ];
 
-        $response = $this->patch("api/users/{$user->id}", $data);
+        $response = $this->actingAs($user)->patch("api/users/{$user->id}", $data);
 
         $userUpdated = User::with('profile')->get()->first();
 
@@ -124,7 +134,7 @@ class UserTest extends TestCase
             'avatar' => $file
         ];
 
-        $response = $this->patch("api/users/{$user->id}/change-avatar", $data);
+        $response = $this->actingAs($user)->patch("api/users/{$user->id}/change-avatar", $data);
 
         $this->assertDatabaseCount('files', 1);
 
@@ -164,7 +174,7 @@ class UserTest extends TestCase
 
         $this->assertEquals($user->id, $profile->id);
 
-        $response = $this->delete("api/users/{$user->id}");
+        $response = $this->actingAs($user)->delete("api/users/{$user->id}");
 
         $this->assertDatabaseCount('users', 0);
         $this->assertDatabaseCount('profiles', 0);
@@ -185,7 +195,7 @@ class UserTest extends TestCase
 
         $user = User::with('profile')->get()->first();
 
-        $response = $this->get("api/users/{$user->id}");
+        $response = $this->actingAs($user)->get("api/users/{$user->id}");
 
         $response->assertJson([
             'data' => [
@@ -223,7 +233,8 @@ class UserTest extends TestCase
             ];
         })->toArray();
 
-        $response = $this->get('api/users');
+        $user = User::factory()->create();
+        $response = $this->actingAs($user)->get('api/users');
 
         $response->assertJson([
             'data' => $users
