@@ -6,6 +6,7 @@ use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Requests\User\ChangeAvatarUserRequest;
 use App\Http\Resources\User\MinimalInfoUserResource;
+use App\Http\Resources\User\MinimalInfoUserWithTokenResource;
 use Modules\File\Transformers\FileResource;
 use App\Http\Resources\User\UserResource;
 use App\Models\User;
@@ -17,6 +18,7 @@ class UserController extends Controller
 
     public function __construct()
     {
+        $this->middleware('auth:sanctum')->except('store');
         $this->userService = new UserService();
     }
 
@@ -37,8 +39,10 @@ class UserController extends Controller
     {
         $data = $request->validated();
         $user = $this->userService->create($data);
+        $accessToken = $user->createToken('general')->plainTextToken;
 
-        return MinimalInfoUserResource::make($user);
+        return MinimalInfoUserWithTokenResource::make($user)
+            ->additional(compact('accessToken'));
     }
 
     /**
