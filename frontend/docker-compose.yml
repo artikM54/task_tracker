@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   frontend:
-    restart: "no"
+    restart: unless-stopped
     container_name: ${APP_NAME}-frontend
     image: node:16
     volumes:
