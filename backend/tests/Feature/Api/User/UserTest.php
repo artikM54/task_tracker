@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
+use Laravel\Sanctum\Sanctum;
 
 class UserTest extends TestCase
 {
@@ -239,5 +240,51 @@ class UserTest extends TestCase
         $response->assertJson([
             'data' => $users
         ]);
+    }
+
+    /** test */
+    public function test_user_login(): void
+    {
+        $this->withoutExceptionHandling();
+
+        $user = User::factory()->create();
+
+        $this->assertDatabaseCount('users', 1);
+        $this->assertDatabaseCount('profiles', 1);
+
+        $data = [
+            'email' => $user->email,
+            'password' => 'password'
+        ];
+
+        $response = $this->post('api/users/login', $data);
+
+        $response->assertJsonStructure([
+            'data' => [
+                'accessToken'
+            ]
+        ]);
+    }
+
+    /** test */
+    public function test_user_logout(): void
+    {
+        $this->withoutExceptionHandling();
+
+        $user = User::factory()->create();
+
+        $token = $user->createToken('general')->plainTextToken;
+        $this->assertNotNull($token);
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->postJson('api/users/logout');
+
+        $response->assertStatus(204);
+
+        Sanctum::actingAs($user);
+        $tokenAfterLogout = $user->tokens->first();
+
+        $this->assertNull($tokenAfterLogout);
     }
 }

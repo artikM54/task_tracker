@@ -16,4 +16,6 @@ use App\Http\Controllers\UserController;
 */
 
 Route::resource('users', UserController::class);
+Route::post('users/login', [UserController::class, 'login']);
+Route::post('users/logout', [UserController::class, 'logout']);
 Route::patch('users/{user}/change-avatar', [UserController::class, 'changeAvatar']);
